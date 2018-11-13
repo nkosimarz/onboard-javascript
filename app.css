@@ -1,7 +1,29 @@
 ﻿body {
     font-family: 'Segoe UI', sans-serif;
+    /* overflow: hidden; */
+    float :none;
+}
+
+div{
+    float :none;
 }
 
 span {
     font-style: italic;
+}
+
+table {
+    table-layout: fixed;
+    width: 100%;
+    border-collapse: collapse;
+    page-break-inside:auto;
+    
+}
+
+table, th, td{
+    border: 0.5px solid slategray;
+}
+
+tr{
+    page-break-inside:auto;
 }

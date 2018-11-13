@@ -10,7 +10,7 @@
         this.element.appendChild(this.myTable);
         // this.myTable.innerText = new Date().toUTCString();
 
-        //keep me 
+        // keep me, also rewrite
         // makes api call and returns data
         function httpGet(theUrl) {
             let xmlHttp = new XMLHttpRequest();
@@ -30,7 +30,7 @@
 
         // make calls and save the string data
         const recordCount = httpGet("http://localhost:2050/recordCount");
-        let table_size = 40;
+        let table_size = 50;
         const columnsString = httpGet("http://localhost:2050/columns");
         let recordsText = httpGet("http://localhost:2050/records?from=0&to=" + table_size);
 
@@ -39,6 +39,13 @@
 
         // this.myTable.innerHTML += recordCount;
         // this.myTable.innerHTML += columnsArray;
+
+        for (const i of columnsArray){
+            let th = document.createElement('th');
+            this.myTable.appendChild(th);
+
+            th.appendChild(document.createTextNode(" " + i));
+       }
 
         for (const iEntry of recordsTable) {
 
@@ -62,12 +69,18 @@
     stop() {
         clearTimeout(this.timerToken);
     }
-
 }
 
 window.onload = () => {
-    var el = document.getElementById('content');
-    var greeter = new Greeter(el);
+    let el = document.getElementById('content');
+    let greeter = new Greeter(el);
     greeter.start();
+
+    document.documentElement.style.overflow = 'hidden';
     // document.getElementById('MEH').innerHTML = "5";
 };
+
+// pages
+// scroll bar
+// borders
+// width
