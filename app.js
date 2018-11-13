@@ -7,11 +7,11 @@ var Greeter = /** @class */ (function () {
         // this.myTable.innerText = new Date().toUTCString();
         // keep me, also rewrite
         // makes api call and returns data
-        function httpGet(theUrl) {
-            var xmlHttp = new XMLHttpRequest();
-            xmlHttp.open("GET", theUrl, false); // false for synchronous request
-            xmlHttp.send(null);
-            return xmlHttp.responseText;
+        function getData(dataLink) {
+            var apiCall = new XMLHttpRequest();
+            apiCall.open("GET", dataLink, false); // false to prevent asych
+            apiCall.send(null);
+            return apiCall.responseText;
         }
         //keep me 
         // converts strings into array and table
@@ -21,10 +21,10 @@ var Greeter = /** @class */ (function () {
             return outputArray;
         }
         // make calls and save the string data
-        var recordCount = httpGet("http://localhost:2050/recordCount");
+        var recordCount = getData("http://localhost:2050/recordCount");
         var table_size = 50;
-        var columnsString = httpGet("http://localhost:2050/columns");
-        var recordsText = httpGet("http://localhost:2050/records?from=0&to=" + table_size);
+        var columnsString = getData("http://localhost:2050/columns");
+        var recordsText = getData("http://localhost:2050/records?from=0&to=" + table_size);
         var columnsArray = parseText(columnsString);
         var recordsTable = parseText(recordsText);
         // this.myTable.innerHTML += recordCount;
@@ -59,10 +59,13 @@ window.onload = function () {
     var el = document.getElementById('content');
     var greeter = new Greeter(el);
     greeter.start();
+    // kill scroll bar
     document.documentElement.style.overflow = 'hidden';
     // document.getElementById('MEH').innerHTML = "5";
 };
 // pages
-// scroll bar
-// borders
-// width
+// borders or highlights
+// buttons
+// difference in table dep on screensize full screen etc
+// tasks, pages to break, then add buttons next and prev, maybe pagination css
+// way to check for number of rows per page / if row has fulled page
