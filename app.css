@@ -1,15 +1,11 @@
 ﻿body {
     font-family: 'Segoe UI', sans-serif;
     float: none;
-    page-break-inside: auto;
-    /* not doing enthing */
     margin: 0px;
 }
 
 div {
     float: none;
-    page-break-inside: auto;
-    /* not doing enthing */
 }
 
 span {
@@ -19,19 +15,29 @@ span {
 table {
     table-layout: fixed;
     width: 100%;
-    /* border-collapse: collapse; */
-    page-break-inside: auto;
-    /* not doing enthing */
-}
-
-table, th, td {
-    border: 0.5px solid slategray;
+    /* height: 100%; */
+    /* height: ; */
+        /* border-collapse: collapse; */
 }
 
 tr {
-    page-break-inside: avoid;
-    page-break-after: auto;
-    /* not doing enthing */
+    height: 5vh;
+    }
+
+    th {
+        height: 3vh;
+        }
+
+table, th, td {
+    border: 0.5px solid green;
 }
 
-/* page breaks NB!! */
+button {
+    /* transition: all .3s; */
+    border: 1px solid white;
+    padding: 8px 16px;
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 15px;
+    height: 20;
+}

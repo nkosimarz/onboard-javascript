@@ -1,16 +1,24 @@
 ﻿<!DOCTYPE html>
 
 <html lang="en">
+
 <head>
     <meta charset="utf-8" />
     <title>Grid</title>
     <link rel="stylesheet" href="app.css" type="text/css" />
     <script src="app.js"></script>
 </head>
-<body>
-    <h1></h1>
 
+<body>
     <div id="content"></div>
-    <div id="MEH"></div>
+    <!-- create buttons in JS -->
+    <button id="button0" onclick="createPage(0)">Start Page</button>
+    <button id="button2" onclick="nextPage()">Next</button>
+    <input type="text" id="recordNum" value="starting record ..."> 
+    <button onclick='createPage(document.getElementById("recordNum").value)'>Go To</button>
+    <!-- <button id="next" onclick="selectPage(next)">Next</button> -->
+    <!-- <button id="buttonx" onclick="createPage(2)">Click me3</button> -->
+    <div id="content2"></div>
 </body>
+
 </html>
