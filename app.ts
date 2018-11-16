@@ -1,38 +1,37 @@
-﻿class Greeter {
+﻿// makes api call and returns data
+function getData(dataLink: string) {
+    let apiCall = new XMLHttpRequest();
+    apiCall.open("GET", dataLink, false); // false to prevent asych // warning need to change
+    apiCall.send(null);
+    return apiCall.responseText;
+}
+
+// converts strings into array and table
+function parseText(textString) {
+    let outputArray = textString.replace(/'/g, '""');
+    outputArray = JSON.parse(textString);
+    return outputArray;
+}
+
+const recordCount = JSON.parse(getData("http://localhost:2050/recordCount"));
+
+class Greeter {
     element: HTMLElement;
     myTable: HTMLElement;
-    timerToken: number;
 
     constructor(element: HTMLElement, firstRecord) {
         this.element = element;
         this.myTable = document.createElement('table');
         this.element.appendChild(this.myTable);
 
-        // keep me, also rewrite
-        // makes api call and returns data
-        function getData(dataLink: string) {
-            let apiCall = new XMLHttpRequest();
-            apiCall.open("GET", dataLink, false); // false to prevent asych // warning need to change
-            apiCall.send(null);
-            return apiCall.responseText;
-        }
-
-        //keep me 
-        // converts strings into array and table
-        function parseText(textString) {
-            // let outputArray = textString.replace(/'/g, '""');
-            let outputArray = JSON.parse(textString);
-            return outputArray;
-        }
-
         // make calls and save the string data
-        const recordCount = JSON.parse(getData("http://localhost:2050/recordCount"));
-        let tableSize = 500;
-        const columnsString = getData("http://localhost:2050/columns");
-        let endRecord = 1*(firstRecord + tableSize);
-        // document.getElementById('content2').innerHTML = " " + endRecord; // this breaks code
-        let recordsText = getData("http://localhost:2050/records?from=" + firstRecord + "&to=" + tableSize);
 
+
+        let tableSize = 100;
+        const columnsString = getData("http://localhost:2050/columns");
+        let endRecord = (firstRecord + tableSize);
+        endRecord = (endRecord >=recordCount ? recordCount-1 : endRecord);
+        let recordsText = getData("http://localhost:2050/records?from=" + firstRecord + "&to=" + endRecord);
         const columnsArray = parseText(columnsString);
         let recordsTable = parseText(recordsText);
 
@@ -61,7 +60,7 @@
             }
 
             // page is overfull stop filling and remove last child
-            if (this.myTable.offsetHeight >= window.innerHeight) {
+            if (this.myTable.offsetHeight > 0.95 * (window.innerHeight)) {
                 this.myTable.removeChild(this.myTable.lastChild)
                 break;
             }
@@ -73,27 +72,53 @@ let lastEntry;
 
 function createPage(firstRecord) {
 
+    // alert(parseInt(firstRecord));
+    if (firstRecord >= recordCount || firstRecord < 0) {
+        alert('please select a NUMBER between 0 and ' + recordCount);
+        return;
+    }
+
     let el = document.getElementById('content');
     el.innerHTML = '';
-    let greeter = new Greeter(el, firstRecord);
+    let greeter = new Greeter(el, parseInt(firstRecord)); // set number is slower
     lastEntry = el.lastChild.lastChild.firstChild.textContent;
-    // let el2 = document.getElementById('content2');
 };
 
 function nextPage() {
-    createPage(parseInt(lastEntry));
+    createPage(lastEntry);
 }
 
 window.onload = () => {
-    document.documentElement.style.overflow = 'hidden';
+
     createPage(0);
+    document.documentElement.style.overflow = 'hidden';
+    let startButton = document.createElement('button');
+    startButton.appendChild(document.createTextNode('Start Page'));
+    document.getElementById('controls').appendChild(startButton);
+    startButton.setAttribute("onclick", "createPage(0)");
+
+    let nextButton = document.createElement('button');
+    nextButton.appendChild(document.createTextNode('Next Page'));
+    document.getElementById('controls').appendChild(nextButton);
+    nextButton.setAttribute("onclick", "nextPage()");
+
+    let gotoButton = document.createElement('button');
+    gotoButton.appendChild(document.createTextNode('Go To'));
+    document.getElementById('controls').appendChild(gotoButton);
+    gotoButton.setAttribute("onclick", 'createPage(document.getElementById("recordNum").value)');
+
+    let inputField = document.createElement('input');
+    document.getElementById('controls').appendChild(inputField);
+    inputField.setAttribute("value", "starting record ...");
+    inputField.setAttribute("id", "recordNum");
 }
 
-// create buttons and text box here instead of html
 // restructure functions and classes for better flow
 // prev and last page button
-// fill screen vs fill window
-// add data from api at any time
+// fill screen vs fill window or fixed window percentage vs font size
+// add data from api at any time (fecth data batch, set limits on data fetch, tenaries for limits, alerts)
 // enter for text field
 // comments
-// fixed window percentage vs font size
+// button space and sizing
+// type strict on numbers , firstrecord, lastentry recordCount
+// help button
