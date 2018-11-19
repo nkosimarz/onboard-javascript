@@ -16,16 +16,20 @@ table {
     table-layout: fixed;
     width: 100%;
     /* height: 100%; */
-    /* height: ; */
+    /* height: 95vh; */
     /* border-collapse: collapse; */
 }
 
-tr {
-    height: 5vh;
+tr, td {
+    height: 44px;
+    /* min-height: 6vh; */
+    /* table-layout: fixed; */
 }
 
 th {
-    height: 3vh;
+    height: 24px;
+    /* min-height: 3vh; */
+    background-color: rgb(186, 216, 186);
 }
 
 table, th, td {
@@ -35,22 +39,30 @@ table, th, td {
 button {
     /* transition: all .3s; */
     /* border: 1px solid black; */
-    /* background-color: skyblue; */
-    padding: 8px 16px;
-    text-decoration: none;
-    border-radius: 5px;
-    /* height: 4vh; */
+    /* background-color: transparent; */
+    /* padding: 8px 16px; */
+    /* text-decoration: none; */
+    /* border-radius: 5px; */
+    height: 40px;
+    /* font-size: 3vh; */
 }
 
-input{
-    /* height: 4vh; */
+tr:hover{background-color: grey}
+/* tr:nth-child(even) {background-color:#f2f2f2} */
+
+input {
+    height: 35px;
 }
 
 .controlset {
-    /* background-color: skyblue; */
-    /* height: 4vh; */
+    background-color: skyblue;
+    height: 40px;
+    margin: 0 auto;
+    display: table;
 }
 
 .tablespace {
     /* background-color: skyblue; */
+    /* text-align: center; */
+    /* height: 95vh; */
 }
