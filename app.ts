@@ -1,7 +1,9 @@
-﻿
+﻿// Onboarding Project - 2018
+
 const RECORD_COUNT = JSON.parse(getData("http://localhost:2050/recordCount")); // total number of records available in webserver
 let LAST_ENTRY, CURRENT_ENTRY; // entry numbers required for prev and next funtionality
 let resizeTimer; // delay required to reduce the number of calls made by browser when resizing the window
+let CONTROLS_HEIGHT;
 
 // makes api call and returns data
 function getData(dataLink: string) {
@@ -28,12 +30,12 @@ class tableGenerator {
         this.element.appendChild(this.myTable);
 
         // get table height based on  remaining window size after buttons
-        let ctrlHeight = (document.getElementById('controls').offsetHeight);
-        let contentHeight = (window.innerHeight - document.getElementById('controls').offsetHeight);
+        
+        let contentHeight = (window.innerHeight - CONTROLS_HEIGHT);
         this.myTable.setAttribute("height", "contentHeight");
 
         // calculate row number based on table header + row heights + borders in CSS and ensure its never less than 1
-        let numRows = Math.floor((contentHeight - ctrlHeight - 26) / 46);
+        let numRows = Math.floor((contentHeight - CONTROLS_HEIGHT - 26) / 46);
         numRows = numRows <= 0 ? 1 : numRows;
 
         // set number of records to get from server and ensure that the last record doesnt exceed the limit.
@@ -80,8 +82,7 @@ function createPage(firstRecord) {
         return;
     }
 
-
-    let contentsDiv = document.getElementById('content');
+    let contentsDiv = this.content;
     contentsDiv.innerHTML = ''; // empty table div to fill in a new table
     let tableElement = new tableGenerator(contentsDiv, parseInt(firstRecord)); // create table using the tableGenerator class
 
@@ -111,7 +112,7 @@ function helpFunc() {
         + 'enter a record ID and click "Go To"')
 }
 
-window.onresize = function () {
+window.onresize = () => {
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(doneResizing, 500);
 
@@ -123,8 +124,8 @@ window.onresize = function () {
 // load page for the first time and create buttons
 window.onload = () => {
 
-    createPage(0);
-    let controlsDiv = document.getElementById('controls');
+    let controlsDiv = this.controls;
+    CONTROLS_HEIGHT = controlsDiv.offsetHeight;
 
     // html for buttons and input text fields
     controlsDiv.innerHTML += '<button onclick = "createPage(0)">First Page</button>';
@@ -133,34 +134,7 @@ window.onload = () => {
     controlsDiv.innerHTML += '<button onclick = "createPage(document.getElementById(&quot;recordNum&quot;).value)"> Go To </button>';
     controlsDiv.innerHTML += '<input value = "record..." id = "recordNum" >';
     controlsDiv.innerHTML += '<button onclick="helpFunc()" > Help </button>';
-
-    // let startButton = document.createElement('button');
-    // startButton.appendChild(document.createTextNode('First Page'));
-    // controlsDiv.appendChild(startButton);
-    // startButton.setAttribute("onclick", "createPage(0)");
-
-    // let prevButton = document.createElement('button');
-    // prevButton.appendChild(document.createTextNode('Prev'));
-    // controlsDiv.appendChild(prevButton);
-    // prevButton.setAttribute("onclick", "prevPage()");
-
-    // let nextButton = document.createElement('button');
-    // nextButton.appendChild(document.createTextNode('Next'));
-    // controlsDiv.appendChild(nextButton);
-    // nextButton.setAttribute("onclick", "nextPage()");
-
-    // let gotoButton = document.createElement('button');
-    // gotoButton.appendChild(document.createTextNode('Go To'));
-    // controlsDiv.appendChild(gotoButton);
-    // gotoButton.setAttribute("onclick", 'createPage(document.getElementById("recordNum").value)');
-
-    // let inputField = document.createElement('input');
-    // controlsDiv.appendChild(inputField);
-    // inputField.setAttribute("value", "record...");
-    // inputField.setAttribute("id", "recordNum");
-
-    // let helpButton = document.createElement('button');
-    // helpButton.appendChild(document.createTextNode('Help'));
-    // controlsDiv.appendChild(helpButton);
-    // helpButton.setAttribute("onclick", "helpFunc()");
+    
+    // create the first page table
+    createPage(0);
 }
