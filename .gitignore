@@ -240,3 +240,16 @@ ModelManifest.xml
 
 # FAKE - F# Make
 .fake/
+
+# generated files 
+.vscode/
+Grid/
+obj/
+Grid.csproj
+Grid.csproj.user
+Grid.sln
+tsconfig.json
+web.config
+web.Debug.config
+web.Release.config
+app.js
