@@ -1,140 +1,205 @@
 ﻿// Onboarding Project - 2018
 
-const RECORD_COUNT = JSON.parse(getData("http://localhost:2050/recordCount")); // total number of records available in webserver
-let LAST_ENTRY, CURRENT_ENTRY; // entry numbers required for prev and next funtionality
+let RECORD_COUNT: number; // total number of records available in webserver
 let resizeTimer; // delay required to reduce the number of calls made by browser when resizing the window
 let CONTROLS_HEIGHT;
+let CONTENT_HEIGHT;
+let columnsString; // variable to store columns text from api call
+let recordsText; // variable to store records from api call
+let columnsArray;
 
 // makes api call and returns data
-function getData(dataLink: string) {
-    let apiCall = new XMLHttpRequest();
-    apiCall.open("GET", dataLink, false); // false to prevent asych // warning need to change
-    apiCall.send(null);
-    return apiCall.responseText;
+function getRecordCount() {
+	const apiCall = new XMLHttpRequest();
+
+	apiCall.onreadystatechange = function () {
+		if (apiCall.readyState === 4 && apiCall.status === 200) {
+			RECORD_COUNT = JSON.parse(apiCall.response);
+
+			if (columnsString !== undefined) {
+				tableElement.generateTable();
+			}
+		}
+	}
+	apiCall.open("GET", "http://localhost:2050/recordCount", true);
+	apiCall.send();
+}
+
+function getCols() {
+	const apiCall = new XMLHttpRequest();
+	apiCall.onreadystatechange = function () {
+		if (apiCall.readyState === 4 && apiCall.status === 200) {
+			columnsString = apiCall.response;
+			columnsArray = parseText(columnsString);
+			if (RECORD_COUNT !== undefined) {
+				tableElement.generateTable();
+			}
+		}
+	}
+	apiCall.open("GET", "http://localhost:2050/columns", true);
+	apiCall.send();
+}
+
+function getTable(start: number, end: number, tableElement) {
+	const apiCall = new XMLHttpRequest();
+
+	const loadDiv = document.createElement('div');
+	loadDiv.setAttribute('class', 'loader')
+	tableElement.myTable.parentNode.appendChild(loadDiv);
+
+	apiCall.onreadystatechange = function () {
+		if (apiCall.readyState === 4 && apiCall.status === 200) {
+			tableElement.myTable.parentNode.removeChild(tableElement.myTable.parentNode.lastChild)
+			recordsText = apiCall.response;
+
+			const recordsTable = parseText(recordsText);
+
+			for (const iEntry of recordsTable) {
+
+				const tr = document.createElement('tr');
+				tableElement.myTable.appendChild(tr);
+
+				for (const jEntry of iEntry) {
+
+					const td = document.createElement('td');
+					td.appendChild(document.createTextNode(" " + jEntry));
+					tr.appendChild(td);
+				}
+			}
+		}
+	}
+	apiCall.open("GET", "http://localhost:2050/records?from=" + start + "&to=" + end, true);
+	apiCall.send();
 }
 
 // converts strings into array and table
-function parseText(textString) {
-    let outputArray = textString.replace(/'/g, '""');
-    outputArray = JSON.parse(textString);
-    return outputArray;
+function parseText(textString: string) {
+	textString = textString.replace(/'/g, '""');
+	const outputArray = JSON.parse(textString);
+	return outputArray;
 }
 
 class tableGenerator {
-    element: HTMLElement;
-    myTable: HTMLElement;
+	element: HTMLElement;
+	myTable: HTMLElement;
+	firstRecord: number;
+	endRecord: number;
 
-    constructor(element: HTMLElement, firstRecord) {
-        this.element = element;
-        this.myTable = document.createElement('table');
-        this.element.appendChild(this.myTable);
+	constructor(element: HTMLElement, firstRecord: number = 0) {
+		this.element = element;
+		this.firstRecord = firstRecord;
+		this.myTable = document.createElement('table');
+		this.element.appendChild(this.myTable);
+	}
 
-        // get table height based on  remaining window size after buttons
-        
-        let contentHeight = (window.innerHeight - CONTROLS_HEIGHT);
-        this.myTable.setAttribute("height", "contentHeight");
+	generateTable() {
 
-        // calculate row number based on table header + row heights + borders in CSS and ensure its never less than 1
-        let numRows = Math.floor((contentHeight - CONTROLS_HEIGHT - 26) / 46);
-        numRows = numRows <= 0 ? 1 : numRows;
+		if (this.firstRecord >= RECORD_COUNT || this.firstRecord < 0) {
+			// make sure first record is set with in proper limits 
+			this.firstRecord = this.firstRecord < 0 ? 0 : this.firstRecord;
+			this.firstRecord = this.firstRecord > RECORD_COUNT - 1 ? RECORD_COUNT - 1 : this.firstRecord;
+			alert('please select a number between 0 and ' + (RECORD_COUNT - 1));
+			return;
+		}
 
-        // set number of records to get from server and ensure that the last record doesnt exceed the limit.
-        let endRecord = (firstRecord + numRows - 1);
-        endRecord = (endRecord >= RECORD_COUNT ? RECORD_COUNT - 1 : endRecord);
+		this.myTable.innerHTML = ''; // empty table div to fill in a new table
 
-        // get data from server
-        const columnsString = getData("http://localhost:2050/columns");
-        let recordsText = getData("http://localhost:2050/records?from=" + firstRecord + "&to=" + endRecord);
+		// get table height based on  remaining window size after buttons
+		CONTENT_HEIGHT = (window.innerHeight - CONTROLS_HEIGHT);
+		this.myTable.setAttribute("height", "CONTENT_HEIGHT");
 
-        // parse text from api call into arrays
-        const columnsArray = parseText(columnsString);
-        let recordsTable = parseText(recordsText);
+		// calculate row number based on table header + row heights + borders in CSS and ensure its never less than 1
+		let numRows: number = Math.floor((CONTENT_HEIGHT - CONTROLS_HEIGHT - 26) / 46);
+		numRows = numRows <= 0 ? 1 : numRows;
 
-        // write html for table header
-        for (const i of columnsArray) {
-            let th = document.createElement('th');
-            this.myTable.appendChild(th);
+		// set number of records to get from server and ensure that the last record doesnt exceed the limit.
+		this.endRecord = this.firstRecord - 1 + numRows;
+		this.endRecord = (this.endRecord >= RECORD_COUNT ? RECORD_COUNT - 1 : this.endRecord);
 
-            th.appendChild(document.createTextNode(" " + i));
-        }
+		// write html for table header
+		for (const i of columnsArray) {
+			const th = document.createElement('th');
+			this.myTable.appendChild(th);
 
-        // write html for table
-        for (const iEntry of recordsTable) {
+			th.appendChild(document.createTextNode(" " + i));
+		}
+		getTable(this.firstRecord, this.endRecord, this);
+	}
 
-            let tr = document.createElement('tr');
-            this.myTable.appendChild(tr);
+	// function used by the next page buttton, requires the last entry from previously generated table
+	nextPage() {
 
-            for (const jEntry of iEntry) {
+		this.firstRecord = this.endRecord + 1;
+		this.firstRecord = this.firstRecord > RECORD_COUNT - 1 ? RECORD_COUNT - 1 : this.firstRecord;
+		// getTable(this.firstRecord, this.endRecord, this);
+		this.generateTable();
+	}
 
-                let td = document.createElement('td');
-                td.appendChild(document.createTextNode(" " + jEntry));
-                tr.appendChild(td);
-            }
-        }
-    }
-}
+	firstPage() {
+		this.firstRecord = 0;
+		// getTable(this.firstRecord, this.endRecord, this);
+		this.generateTable();
+	}
 
-function createPage(firstRecord) {
-
-    // ensure that the user input is a number and within range of available records
-    if (firstRecord >= RECORD_COUNT || firstRecord < 0 || isNaN(firstRecord)) {
-        alert('please select a NUMBER between 0 and ' + (RECORD_COUNT - 1));
-        return;
-    }
-
-    let contentsDiv = this.content;
-    contentsDiv.innerHTML = ''; // empty table div to fill in a new table
-    let tableElement = new tableGenerator(contentsDiv, parseInt(firstRecord)); // create table using the tableGenerator class
-
-    // keep the ID of the first and last table entries to use for next and previous page buttons
-    LAST_ENTRY = contentsDiv.lastChild.lastChild.firstChild.textContent;
-    CURRENT_ENTRY = firstRecord;
-};
-
-// fucntion used by the next page buttton, requires the last entry from previously generated table
-function nextPage() {
-    createPage(parseInt(LAST_ENTRY) + 1);
-}
-
-// fucntion used by the previous page buttton, requires the first and last entry from previously generated table
-function prevPage() {
-
-    let newfirstEntry = CURRENT_ENTRY - (LAST_ENTRY - CURRENT_ENTRY) - 1;
-
-    // if the new first entry is less than zero, take user to the first page 
-    newfirstEntry <= 0 ? createPage(0) : createPage(newfirstEntry);
+	// function used by the next page buttton, requires the first and last entry from previously generated table
+	prevPage() {
+		// if the new first entry is less than zero, take user to the first page 
+		this.firstRecord = this.firstRecord - (this.endRecord - this.firstRecord) - 1;
+		this.firstRecord = this.firstRecord < 0 ? 0 : this.firstRecord;
+		// getTable(this.firstRecord, this.endRecord, this);
+		this.generateTable();
+	}
 }
 
 // hint for the user
 function helpFunc() {
-    alert('Table for viewing records with IDs 0 to '
-        + (RECORD_COUNT - 1) + ' (Numbers Only)\nTo start from a specific record'
-        + 'enter a record ID and click "Go To"')
+	alert(
+		"Table for viewing records with IDs 0 to" + (RECORD_COUNT - 1) + " (Numbers Only)."
+		+ "\nTo start from a specific record enter a record ID and click 'Go To'.");
+}
+
+let customPage = () => {
+	let inputVal = parseInt(this.recordNum.value);
+	if (isNaN(inputVal)) {
+		alert('Please type in a number')
+		return;
+	}
+	tableElement.firstRecord = inputVal;
+	tableElement.generateTable();
 }
 
 window.onresize = () => {
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(doneResizing, 500);
+	const doneResizing = () => {
+		tableElement.generateTable();
+	}
 
-    function doneResizing() {
-        createPage(CURRENT_ENTRY);
-    }
+	clearTimeout(resizeTimer);
+	resizeTimer = setTimeout(doneResizing, 500);
 }
+
+let contentsDiv2: HTMLElement;
+let tableElement: tableGenerator;
 
 // load page for the first time and create buttons
 window.onload = () => {
 
-    let controlsDiv = this.controls;
-    CONTROLS_HEIGHT = controlsDiv.offsetHeight;
+	// get columns and record coun,asynch
+	getRecordCount();
+	getCols();
 
-    // html for buttons and input text fields
-    controlsDiv.innerHTML += '<button onclick = "createPage(0)">First Page</button>';
-    controlsDiv.innerHTML += '<button onclick = "prevPage()" > Prev </button>';
-    controlsDiv.innerHTML += '<button onclick = "nextPage()" > Next </button>';
-    controlsDiv.innerHTML += '<button onclick = "createPage(document.getElementById(&quot;recordNum&quot;).value)"> Go To </button>';
-    controlsDiv.innerHTML += '<input value = "record..." id = "recordNum" >';
-    controlsDiv.innerHTML += '<button onclick="helpFunc()" > Help </button>';
-    
-    // create the first page table
-    createPage(0);
+	const controlsDiv = this.controls;
+	CONTROLS_HEIGHT = controlsDiv.offsetHeight;
+
+	// html for buttons and input text fields
+	controlsDiv.innerHTML += `
+ 		<button onclick = "tableElement.firstPage()">First Page</button>
+		<button onclick = "tableElement.prevPage()" > Prev </button>
+		<button onclick = "tableElement.nextPage()" > Next </button>
+		<button onclick = "customPage()"> Go To </button>
+		<input value = "record..." id = "recordNum" >
+		<button onclick = "helpFunc()" > Help </button>`;
+
+	// initialise the table's parent div, create a tableElement
+	contentsDiv2 = document.getElementById('content');
+	tableElement = new tableGenerator(contentsDiv2);
 }

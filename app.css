@@ -2,7 +2,7 @@
     font-family: 'Segoe UI', sans-serif;
     float: none;
     margin: 0px;
-    overflow:hidden;
+    overflow: hidden;
 }
 
 div {
@@ -16,20 +16,14 @@ span {
 table {
     table-layout: fixed;
     width: 100%;
-    /* height: 100%; */
-    /* height: 95vh; */
-    /* border-collapse: collapse; */
 }
 
 tr, td {
     height: 44px;
-    /* min-height: 6vh; */
-    /* table-layout: fixed; */
 }
 
 th {
     height: 24px;
-    /* min-height: 3vh; */
     background-color: rgb(186, 216, 186);
 }
 
@@ -38,18 +32,12 @@ table, th, td {
 }
 
 button {
-    /* transition: all .3s; */
-    /* border: 1px solid black; */
-    /* background-color: transparent; */
-    /* padding: 8px 16px; */
-    /* text-decoration: none; */
-    /* border-radius: 5px; */
     height: 40px;
-    /* font-size: 3vh; */
 }
 
-tr:hover{background-color: grey}
-/* tr:nth-child(even) {background-color:#f2f2f2} */
+tr:hover {
+    background-color: grey
+}
 
 input {
     height: 35px;
@@ -62,8 +50,25 @@ input {
     display: table;
 }
 
-.tablespace {
-    /* background-color: skyblue; */
-    /* text-align: center; */
-    /* height: 95vh; */
+p {
+    text-align: center;
+}
+
+.loader {
+    border: 16px solid rgb(186, 216, 186);
+    border-top: 16px solid green;
+    border-radius: 100%;
+    width: 160px;
+    height: 160px;
+    animation: spin 2s linear infinite;
+    margin: 0 auto;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
 }
