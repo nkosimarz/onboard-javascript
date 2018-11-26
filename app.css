@@ -49,3 +49,26 @@ input {
     margin: 0 auto;
     display: table;
 }
+
+p {
+    text-align: center;
+}
+
+.loader {
+    border: 16px solid rgb(186, 216, 186);
+    border-top: 16px solid green;
+    border-radius: 100%;
+    width: 160px;
+    height: 160px;
+    animation: spin 2s linear infinite;
+    margin: 0 auto;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
