@@ -1,9 +1,8 @@
 ﻿// Onboarding Project - 2018
 
-let recordCount: number;	// total number of records available in webserver
 let resizeTimer: number;	//delay required to reduce the number of calls made by browser when resizing the window
-let controlHeight: number;	// height of the buttons div
-let columnsString: string;	// variable to store columns text from api call
+let controlHeight: number;	// height of the buttons div, seperate from the tables div
+let tableElement: TableGenerator;
 
 // converts strings into array and table
 function parseText(textString: string) {
@@ -12,11 +11,13 @@ function parseText(textString: string) {
 	return outputArray;
 }
 
-class tableGenerator {
+class TableGenerator {
 	element: HTMLElement;
 	myTable: HTMLElement;
 	firstRecord: number;
 	endRecord: number;
+	columnsString: string;
+	recordCount: number;
 
 	constructor(element: HTMLElement, firstRecord: number = 0) {
 		this.element = element;
@@ -68,51 +69,59 @@ class tableGenerator {
 		apiCall.send();
 	}
 
-	// makes api call to get the record count
-	getRecordCount() {
-		const apiCall = new XMLHttpRequest();
-
-		apiCall.onreadystatechange = function () {
-			if (apiCall.readyState === 4 && apiCall.status === 200) {
-				recordCount = JSON.parse(apiCall.response);
-
-				// check if both the columns and record count calls are done then proceed to generate table
-				if (columnsString !== undefined) {
-					tableElement.generateTable();
-				}
+	// callback for total record count
+	recordCallback(apiCall: XMLHttpRequest) {
+		return () => {
+			let isDataFetched : Boolean = (apiCall.readyState === 4 && apiCall.status === 200);
+			if (isDataFetched) {
+				this.recordCount = JSON.parse(apiCall.responseText);
+				tableElement.generateTable();
 			}
 			return;
 		}
-		
+	}
+
+	// makes api call to get the record count
+	getRecordCount() {
+		const apiCall = new XMLHttpRequest();
+		apiCall.onreadystatechange = this.recordCallback(apiCall);
 		apiCall.open("GET", "http://localhost:2050/recordCount", true);
 		apiCall.send();
+	}
+
+	// callback for column headings
+	columnCallback(apiCall: XMLHttpRequest) {
+		return () => {
+			let isDataFetched : Boolean = (apiCall.readyState === 4 && apiCall.status === 200);
+			if (isDataFetched) {
+				this.columnsString = apiCall.responseText;
+				tableElement.generateTable();
+			}
+		}
 	}
 
 	// api call to get column headings
 	getCols() {
 		const apiCall = new XMLHttpRequest();
-		apiCall.onreadystatechange = function () {
-			if (apiCall.readyState === 4 && apiCall.status === 200) {
-				columnsString = apiCall.response;
-
-				// check if both the columns and record count calls are done then proceed to generate table
-				if (recordCount !== undefined) {
-					tableElement.generateTable();
-				}
-			}
-			return;
-		}
+		apiCall.onreadystatechange = this.columnCallback(apiCall);
 		apiCall.open("GET", "http://localhost:2050/columns", true);
 		apiCall.send();
 	}
 
 	generateTable() {
 
-		if (this.firstRecord >= recordCount || this.firstRecord < 0) {
+		let isStaticDatafetched: Boolean = (this.columnsString === undefined || this.recordCount === undefined);
+		// check if both the columns and record count calls are done then proceed to generate table
+		if (isStaticDatafetched) {
+			// data is not ready
+			return;
+		}
+
+		if (this.firstRecord >= this.recordCount || this.firstRecord < 0) {
 			// make sure first record is set with in proper limits 
 			this.firstRecord = this.firstRecord < 0 ? 0 : this.firstRecord;
-			this.firstRecord = this.firstRecord > recordCount - 1 ? recordCount - 1 : this.firstRecord;
-			alert('please select a number between 0 and ' + (recordCount - 1));
+			this.firstRecord = this.firstRecord > this.recordCount - 1 ? this.recordCount - 1 : this.firstRecord;
+			alert('please select a number between 0 and ' + (this.recordCount - 1));
 			return;
 		}
 
@@ -128,9 +137,9 @@ class tableGenerator {
 
 		// set number of records to get from server and ensure that the last record doesnt exceed the limit.
 		this.endRecord = this.firstRecord - 1 + numRows;
-		this.endRecord = (this.endRecord >= recordCount ? recordCount - 1 : this.endRecord);
+		this.endRecord = (this.endRecord >= this.recordCount ? this.recordCount - 1 : this.endRecord);
 
-		const columnsArray = parseText(columnsString);
+		const columnsArray = parseText(this.columnsString);
 
 		// write html for table header
 		for (const i of columnsArray) {
@@ -146,7 +155,7 @@ class tableGenerator {
 	nextPage() {
 
 		this.firstRecord = this.endRecord + 1;
-		this.firstRecord = this.firstRecord > recordCount - 1 ? recordCount - 1 : this.firstRecord;
+		this.firstRecord = this.firstRecord > this.recordCount - 1 ? this.recordCount - 1 : this.firstRecord;
 		this.generateTable();
 	}
 
@@ -168,7 +177,7 @@ class tableGenerator {
 // hint for the user
 function helpFunc() {
 	alert(
-		"Table for viewing records with IDs 0 to" + (recordCount - 1) + " (Numbers Only)."
+		"Table for viewing records with IDs 0 to" + (this.recordCount - 1) + " (Numbers Only)."
 		+ "\nTo start from a specific record enter a record ID and click 'Go To'.");
 }
 
@@ -182,14 +191,13 @@ const customPage = () => {
 	tableElement.generateTable();
 }
 
-let contentsDiv: HTMLElement;
-let tableElement: tableGenerator;
-
 // load page for the first time and create buttons
 const generateHome = () => {
 
+	// initialise the table's parent div, create a tableElement
+	let contentsDiv: HTMLElement;
 	contentsDiv = document.getElementById('content');
-	tableElement = new tableGenerator(contentsDiv);
+	tableElement = new TableGenerator(contentsDiv);
 
 	// get columns and record count,asynch
 	tableElement.getRecordCount();
@@ -206,9 +214,6 @@ const generateHome = () => {
 		<button onclick = "customPage()"> Go To </button>
 		<input value = "record..." id = "recordNum" >
 		<button onclick = "helpFunc()" > Help </button>`;
-
-	// initialise the table's parent div, create a tableElement
-
 }
 
 window.onload = generateHome;
@@ -221,9 +226,3 @@ window.onresize = () => {
 	clearTimeout(resizeTimer);
 	resizeTimer = setTimeout(doneResizing, 500);
 }
-
-// problems 
-// duplicate code
-// need to pre load columns, delete previous columns
-// need better loading page
-// next button
